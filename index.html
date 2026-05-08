@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario de Marca y Espacio</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --black: #0A0A0A; --dark: #1A1A1A; --mid: #6B6B6B; --light: #B0B0B0;
+    --rule: #E8E8E8; --bg: #FAFAF8; --white: #FFFFFF;
+    --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+  html { font-size: 16px; }
+  body { font-family: var(--font); background: var(--bg); color: var(--dark); line-height: 1.6; min-height: 100vh; }
+  .page { max-width: 680px; margin: 0 auto; padding: 0 24px 100px; }
+
+  /* Header */
+  .header { padding: 48px 0 32px; border-bottom: 1px solid var(--rule); margin-bottom: 40px; }
+  .header h1 { font-size: 32px; font-weight: 300; color: var(--black); letter-spacing: -0.02em; line-height: 1.2; }
+  .header h1 strong { font-weight: 600; }
+  .header-sub { font-size: 14px; color: var(--mid); line-height: 1.7; max-width: 480px; margin-top: 12px; }
+  .progress-wrap { margin-top: 24px; display: flex; align-items: center; gap: 14px; }
+  .progress-track { flex: 1; height: 1px; background: var(--rule); position: relative; overflow: hidden; }
+  .progress-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--black); transition: width 0.5s ease; width: 0%; }
+  .progress-label { font-size: 11px; color: var(--light); white-space: nowrap; min-width: 36px; text-align: right; }
+
+  /* Part divider */
+  .part-divider { margin: 48px 0 40px; display: flex; align-items: center; gap: 16px; }
+  .part-divider-line { flex: 1; height: 1px; background: var(--black); }
+  .part-divider-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--black); white-space: nowrap; }
+
+  /* Section */
+  .section { margin-bottom: 44px; }
+  .section-header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); }
+  .section-num { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; color: var(--light); min-width: 24px; }
+  .section-title { font-size: 15px; font-weight: 500; color: var(--black); letter-spacing: -0.01em; }
+
+  /* Questions */
+  .q-group { margin-bottom: 22px; }
+  .q-label { font-size: 13.5px; font-weight: 500; color: var(--black); margin-bottom: 8px; line-height: 1.5; }
+  .q-hint { font-size: 12px; color: var(--light); font-weight: 400; display: block; margin-top: 2px; font-style: italic; }
+  textarea, input[type="text"] { width: 100%; background: var(--white); border: 1px solid var(--rule); border-radius: 6px; padding: 11px 14px; font-size: 14px; font-family: var(--font); color: var(--dark); line-height: 1.6; transition: border-color 0.15s; -webkit-appearance: none; }
+  textarea { min-height: 72px; resize: vertical; }
+  textarea.lg { min-height: 100px; }
+  textarea:focus, input:focus { outline: none; border-color: var(--black); }
+  textarea::placeholder, input::placeholder { color: var(--light); }
+
+  /* Chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+  .chip { border: 1px solid var(--rule); border-radius: 100px; padding: 6px 16px; font-size: 13px; color: var(--mid); background: var(--white); cursor: pointer; transition: all 0.15s; font-family: var(--font); line-height: 1; }
+  .chip:hover { border-color: var(--dark); color: var(--dark); }
+  .chip.active { background: var(--black); color: var(--white); border-color: var(--black); }
+
+  /* Scale */
+  .scale-row { display: flex; align-items: center; gap: 12px; }
+  .scale-end { font-size: 12px; color: var(--mid); min-width: 100px; line-height: 1.3; }
+  .scale-end.right { text-align: right; }
+  .scale-btns { display: flex; gap: 5px; flex: 1; justify-content: center; }
+  .scale-btn { width: 38px; height: 38px; border: 1px solid var(--rule); border-radius: 6px; font-size: 13px; color: var(--mid); background: var(--white); cursor: pointer; font-family: var(--font); display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+  .scale-btn:hover { border-color: var(--dark); color: var(--dark); }
+  .scale-btn.active { background: var(--black); color: var(--white); border-color: var(--black); }
+
+  /* Refs */
+  .ref-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .ref-item { border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px; background: var(--white); }
+  .ref-item label { display: block; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; color: var(--light); text-transform: uppercase; margin-bottom: 7px; }
+  .ref-item textarea { min-height: 54px; font-size: 13px; padding: 7px 9px; border-radius: 4px; }
+
+  @media (max-width: 520px) {
+    .ref-grid { grid-template-columns: repeat(2, 1fr); }
+    .scale-end { min-width: 64px; font-size: 11px; }
+    .scale-btn { width: 32px; height: 32px; font-size: 12px; }
+  }
+
+  /* Footer */
+  .footer { position: sticky; bottom: 0; background: rgba(250,250,248,0.96); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid var(--rule); padding: 14px 24px; }
+  .footer-inner { max-width: 680px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .footer-status { font-size: 12px; color: var(--light); }
+  .btn { padding: 10px 22px; border-radius: 6px; font-size: 13.5px; font-family: var(--font); cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 8px; border: none; }
+  .btn-primary { background: var(--black); color: var(--white); font-weight: 500; }
+  .btn-primary:hover { background: #333; }
+  .btn-primary:disabled { opacity: 0.4; cursor: default; }
+  .ico { width: 15px; height: 15px; }
+
+  /* Success */
+  .success-banner { display: none; margin-top: 24px; padding: 20px 24px; border: 1px solid var(--rule); border-radius: 8px; background: var(--white); }
+  .success-banner p { font-size: 14px; color: var(--mid); line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <h1>Cuestionario<br><strong>de Marca y Espacio</strong></h1>
+    <p class="header-sub">Completa las secciones con la mayor profundidad posible. No buscamos respuestas perfectas, sino honestas. Al terminar, descarga el PDF con tus respuestas y envíanoslo.</p>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
+      <div class="progress-label" id="progLabel">0%</div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════ PARTE 1: MARCA -->
+  <div class="part-divider">
+    <div class="part-divider-line"></div>
+    <div class="part-divider-label">Parte 1 — Marca</div>
+    <div class="part-divider-line"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">00</span><span class="section-title">Contexto del proyecto</span></div>
+    <div class="q-group"><div class="q-label">¿Por qué nace esta nueva marca ahora?</div><textarea data-q="c1" placeholder="Contexto estratégico, timing, detonante del proyecto…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué oportunidad detectáis en el mercado?</div><textarea data-q="c2" placeholder="Hueco no cubierto, cambio de comportamiento del consumidor…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué está pasando en la categoría que hace necesario este movimiento?</div><textarea data-q="c3" placeholder="Tendencias, saturación, cambio de expectativas…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué debería permitir esta nueva marca que hoy no es posible?</div><textarea data-q="c4" placeholder="Nuevos mercados, nuevos clientes, nuevos precios, nuevas narrativas…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué expectativas de negocio existen para esta nueva marca en 1, 3 y 5 años?</div><textarea class="lg" data-q="c5" placeholder="Volumen, canales, geografías, cuota de mercado…"></textarea></div>
+    <div class="q-group">
+      <div class="q-label">¿Qué papel jugará dentro del grupo?</div>
+      <div class="chips" data-q="c6" data-multi="false">
+        <button type="button" class="chip" data-v="Independiente">Independiente</button>
+        <button type="button" class="chip" data-v="Complementaria">Complementaria</button>
+        <button type="button" class="chip" data-v="Aspiracional">Aspiracional</button>
+        <button type="button" class="chip" data-v="Experimental">Experimental</button>
+        <button type="button" class="chip" data-v="Otra">Otra</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">01</span><span class="section-title">Visión y ambición</span></div>
+    <div class="q-group"><div class="q-label">¿Qué os gustaría que la gente dijera de esta marca dentro de 5 años?</div><textarea data-q="v1" placeholder="Frase que un cliente o periodista podría decir…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué impacto debería tener más allá de vender producto?</div><textarea data-q="v2" placeholder="Impacto cultural, emocional, social…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué ambición cultural o emocional tiene la marca?</div><textarea data-q="v3" placeholder="Qué conversación quiere liderar, qué representa…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué significa para vosotros «premium» en este proyecto?<span class="q-hint">En positivo y en negativo. ¿Qué sí y qué no?</span></div><textarea class="lg" data-q="v4" placeholder="Premium para nosotros es… / Premium para nosotros nunca es…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué marcas representan el nivel de percepción al que aspiráis?<span class="q-hint">De cualquier sector. Con una frase explicando por qué.</span></div><textarea data-q="v5" placeholder="Ej: Aesop — por la coherencia entre producto, espacio y comunicación…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué NO queréis que esta marca sea nunca?</div><textarea data-q="v6" placeholder="Límites, territorios prohibidos, errores a evitar…"></textarea></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">02</span><span class="section-title">Audiencia y cliente</span></div>
+    <div class="q-group"><div class="q-label">¿Quién es el cliente ideal?<span class="q-hint">Descríbelo como una persona, no como un segmento.</span></div><textarea class="lg" data-q="a1" placeholder="Edad, actitud, qué consume, qué le importa, qué rechaza…"></textarea></div>
+    <div class="q-group">
+      <div class="q-label">¿Qué busca realmente cuando compra este tipo de productos?<span class="q-hint">Elige los más relevantes.</span></div>
+      <div class="chips" data-q="a2" data-multi="true">
+        <button type="button" class="chip" data-v="Funcionalidad">Funcionalidad</button>
+        <button type="button" class="chip" data-v="Estatus">Estatus</button>
+        <button type="button" class="chip" data-v="Diseño">Diseño</button>
+        <button type="button" class="chip" data-v="Autoexpresión">Autoexpresión</button>
+        <button type="button" class="chip" data-v="Calidad">Calidad</button>
+        <button type="button" class="chip" data-v="Tendencia">Tendencia</button>
+        <button type="button" class="chip" data-v="Regalo">Regalo</button>
+      </div>
+    </div>
+    <div class="q-group"><div class="q-label">¿Qué marcas consume ya vuestro cliente ideal?</div><textarea data-q="a3" placeholder="Moda, tecnología, lifestyle, alimentación, ocio…"></textarea></div>
+    <div class="q-group">
+      <div class="q-label">¿Qué nivel adquisitivo tiene?</div>
+      <div class="chips" data-q="a4" data-multi="false">
+        <button type="button" class="chip" data-v="Medio">Medio</button>
+        <button type="button" class="chip" data-v="Medio-alto">Medio-alto</button>
+        <button type="button" class="chip" data-v="Alto">Alto</button>
+        <button type="button" class="chip" data-v="Variable según producto">Variable según producto</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">03</span><span class="section-title">Producto y propuesta de valor</span></div>
+    <div class="q-group"><div class="q-label">¿Cuál será el núcleo del negocio?</div><textarea data-q="p1" placeholder="Categoría principal, producto estrella, modelo de negocio…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué hará diferente al producto?</div><textarea data-q="p2" placeholder="Materiales, proceso, diseño, exclusividad, servicio…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué atributos deben percibirse inmediatamente?<span class="q-hint">Las tres primeras palabras que debería pensar alguien al verlo o tocarlo.</span></div><input type="text" data-q="p3" placeholder="Ej: precisión, deseo, coherencia…"></div>
+    <div class="q-group">
+      <div class="q-label">¿Qué peso tendrá cada pilar?<span class="q-hint">Puntúa del 1 (poco relevante) al 5 (muy relevante).</span></div>
+      <div id="pilares" style="margin-top:12px;display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+    <div class="q-group"><div class="q-label">¿Qué productos o categorías podrían aparecer en el futuro?</div><textarea data-q="p5" placeholder="Extensiones de línea, colaboraciones, nuevas categorías…"></textarea></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">04</span><span class="section-title">Posicionamiento</span></div>
+    <div class="q-group"><div class="q-label">¿Contra quién compite realmente esta marca?</div><textarea data-q="pos1" placeholder="Competidores directos, indirectos y sustitutos…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué marcas admiráis como referencia de posicionamiento?</div><textarea data-q="pos2" placeholder="Con una frase breve explicando qué admiráis de cada una…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué percepción debería generar frente a los competidores?</div><textarea data-q="pos3" placeholder="¿Más sofisticada? ¿Más joven? ¿Más honesta? ¿Más deseable?…"></textarea></div>
+    <div class="q-group">
+      <div class="q-label">¿Qué equilibrio buscáis?<span class="q-hint">1 = extremo izquierdo · 5 = extremo derecho.</span></div>
+      <div id="ejes" style="margin-top:12px;display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">05</span><span class="section-title">Personalidad y tono</span></div>
+    <div class="q-group"><div class="q-label">¿Qué 5 adjetivos deberían definir la marca?</div><input type="text" data-q="t1" placeholder="Separados por coma…"></div>
+    <div class="q-group"><div class="q-label">¿Qué emociones debe transmitir?</div><input type="text" data-q="t2" placeholder="Ej: confianza, deseo, claridad, pertenencia…"></div>
+    <div class="q-group"><div class="q-label">¿Cómo debe hablar esta marca?</div><textarea data-q="t3" placeholder="Registro, longitud de mensajes, relación con el cliente…"></textarea></div>
+    <div class="q-group"><div class="q-label">¿Qué tono NO debería usar nunca?</div><textarea data-q="t4" placeholder="Ejemplos de comunicación que representarían lo opuesto…"></textarea></div>
+    <div class="q-group">
+      <div class="q-label">¿Cómo debe sentirse la marca?<span class="q-hint">Elige los que apliquen.</span></div>
+      <div class="chips" data-q="t5" data-multi="true">
+        <button type="button" class="chip" data-v="Sofisticada">Sofisticada</button>
+        <button type="button" class="chip" data-v="Editorial">Editorial</button>
+        <button type="button" class="chip" data-v="Contemporánea">Contemporánea</button>
+        <button type="button" class="chip" data-v="Tecnológica">Tecnológica</button>
+        <button type="button" class="chip" data-v="Creativa">Creativa</button>
+        <button type="button" class="chip" data-v="Silenciosa">Silenciosa</button>
+        <button type="button" class="chip" data-v="Aspiracional">Aspiracional</button>
+        <button type="button" class="chip" data-v="Cercana">Cercana</button>
+      </div>
+    </div>
+    <div class="q-group"><div class="q-label">¿Qué nivel de ironía, tendencia o actitud puede permitirse?</div><textarea data-q="t6" placeholder="¿Puede ser divertida? ¿Provocadora? ¿Irreverente? ¿Dónde está el límite?"></textarea></div>
+    <div class="q-group">
+      <div class="q-label">¿Debe sentirse más…?<span class="q-hint">Elige los que apliquen.</span></div>
+      <div class="chips" data-q="t7" data-multi="true">
+        <button type="button" class="chip" data-v="Europea">Europea</button>
+        <button type="button" class="chip" data-v="Global">Global</button>
+        <button type="button" class="chip" data-v="Mediterránea">Mediterránea</button>
+        <button type="button" class="chip" data-v="Urbana">Urbana</button>
+        <button type="button" class="chip" data-v="Digital">Digital</button>
+        <button type="button" class="chip" data-v="Cultural">Cultural</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">06</span><span class="section-title">Referencias visuales y culturales</span></div>
+    <p style="font-size:13px;color:#6B6B6B;margin-bottom:16px;line-height:1.7">Referencias que representen el universo aspiracional. Links, nombres, descripciones o cualquier cosa que ayude a visualizar el mundo de la marca.</p>
+    <div class="ref-grid" id="refGrid"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ PARTE 2: ESPACIO -->
+  <div class="part-divider">
+    <div class="part-divider-line"></div>
+    <div class="part-divider-label">Parte 2 — Espacio</div>
+    <div class="part-divider-line"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">07</span><span class="section-title">Objetivos del proyecto</span></div>
+    <div class="q-group"><div class="q-label">Tipología de local<span class="q-hint">Centro comercial, pie de calle, superficie estimada.</span></div><textarea data-q="e1" placeholder="Formato preferente, m² orientativos, localizaciones previstas…"></textarea></div>
+    <div class="q-group"><div class="q-label">Zonificación de tienda<span class="q-hint">¿Cómo imaginais dividido el espacio?</span></div><textarea data-q="e2" placeholder="Zonas, flujos, áreas diferenciadas…"></textarea></div>
+    <div class="q-group"><div class="q-label">Mapa de productos y servicios<span class="q-hint">Número de categorías, referencias, servicios a ofrecer.</span></div><textarea data-q="e3" placeholder="Qué se vende, cuántas referencias, qué servicios complementan…"></textarea></div>
+    <div class="q-group"><div class="q-label">Zona de caja y trasera<span class="q-hint">Necesidades, formas de pago, tecnología y hardware a tener en cuenta.</span></div><textarea data-q="e4" placeholder="TPV, autoservicio, número de cajas, almacenaje cercano…"></textarea></div>
+    <div class="q-group"><div class="q-label">Back office<span class="q-hint">Almacén, office, necesidades internas.</span></div><textarea data-q="e5" placeholder="M² necesarios, condiciones especiales, acceso de mercancía…"></textarea></div>
+    <div class="q-group"><div class="q-label">Maquinaria y tecnología a incluir</div><textarea data-q="e6" placeholder="Equipos específicos, instalaciones técnicas, pantallas, sensores…"></textarea></div>
+    <div class="q-group"><div class="q-label">Viaje del consumidor inicial<span class="q-hint">¿Cómo debería ser la experiencia desde que entra hasta que sale?</span></div><textarea class="lg" data-q="e7" placeholder="Primer contacto visual, recorrido natural, momentos clave, salida…"></textarea></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">08</span><span class="section-title">Identidad retail</span></div>
+    <div class="q-group"><div class="q-label">Aspectos que debemos replantear<span class="q-hint">Por experiencia pasada, ¿qué no ha funcionado y hay que revisar?</span></div><textarea class="lg" data-q="r1" placeholder="Elementos de la identidad actual que generan fricción o no encajan con la nueva dirección…"></textarea></div>
+    <div class="q-group"><div class="q-label">Aspectos que debemos potenciar<span class="q-hint">Por experiencia pasada, ¿qué ha funcionado bien y merece amplificarse?</span></div><textarea class="lg" data-q="r2" placeholder="Elementos que conectan bien con el cliente y refuerzan la marca o el espacio…"></textarea></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">09</span><span class="section-title">Escalabilidad</span></div>
+    <div class="q-group"><div class="q-label">Plan de expansión<span class="q-hint">Distintos mercados para los próximos 3 años.</span></div><textarea data-q="s1" placeholder="Ciudades, países, número de aperturas previstas por año…"></textarea></div>
+    <div class="q-group"><div class="q-label">Tipología de formatos<span class="q-hint">Definición de 2–3 formatos genéricos en los que se pretende implantar.</span></div><textarea data-q="s2" placeholder="Ej: flagship 300m², tienda estándar 80m², corner 20m²…"></textarea></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><span class="section-num">10</span><span class="section-title">Omnicanalidad</span></div>
+    <div class="q-group"><div class="q-label">Tecnología en el punto de venta<span class="q-hint">Sistema de autocobro, venta digital, pantallas, etc.</span></div><textarea data-q="o1" placeholder="Qué tecnología está previsto implementar o explorar…"></textarea></div>
+    <div class="q-group"><div class="q-label">Relación Online–Offline<span class="q-hint">¿Cómo es hoy? ¿Existe algún plan de optimización o implementación?</span></div><textarea data-q="o2" placeholder="Estado actual del canal online, integración con tienda física, novedades previstas…"></textarea></div>
+  </div>
+
+  <div class="success-banner" id="successBanner">
+    <p><strong>PDF generado.</strong> Revisa la descarga en tu carpeta. Envíanos el archivo por email o por el canal que prefieras.</p>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div class="footer-inner">
+    <span class="footer-status" id="footerStatus">Completa el formulario para descargar el PDF</span>
+    <button type="button" class="btn btn-primary" id="btnExport">
+      <svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v10m0 0-3-3m3 3 3-3M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2"/></svg>
+      Descargar respuestas (PDF)
+    </button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const PILARES = ["Moda","Tecnología","Lifestyle","Diseño","Funcionalidad"];
+const EJES = [["Cercanía","Exclusividad"],["Tendencia","Atemporalidad"],["Moda","Tecnología"],["Minimalismo","Expresividad"],["Accesibilidad","Deseo"]];
+const REFS = ["Marcas","Espacios","Campañas","Arquitectura","Moda","Objetos","Editorial","Arte","Materiales"];
+
+const LABELS = {
+  c1:"Por qué nace esta marca",c2:"Oportunidad en el mercado",c3:"Contexto de categoría",c4:"Qué permite esta marca",c5:"Expectativas de negocio",c6:"Papel dentro del grupo",
+  v1:"Qué dirán en 5 años",v2:"Impacto más allá del producto",v3:"Ambición cultural / emocional",v4:"Qué significa premium",v5:"Marcas de referencia",v6:"Qué NO debe ser",
+  a1:"Cliente ideal",a2:"Qué busca al comprar",a3:"Marcas que consume",a4:"Nivel adquisitivo",
+  p1:"Núcleo del negocio",p2:"Diferenciación del producto",p3:"Atributos inmediatos",p5:"Categorías futuras",
+  pos1:"Competidores reales",pos2:"Marcas admiradas",pos3:"Percepción frente a competidores",
+  t1:"5 adjetivos",t2:"Emociones",t3:"Cómo habla",t4:"Tono prohibido",t5:"Cómo debe sentirse",t6:"Ironía y actitud",t7:"Dimensión cultural",
+  e1:"Tipología de local",e2:"Zonificación de tienda",e3:"Mapa de productos y servicios",e4:"Zona de caja y trasera",e5:"Back office",e6:"Maquinaria y tecnología",e7:"Viaje del consumidor",
+  r1:"Aspectos a replantear",r2:"Aspectos a potenciar",
+  s1:"Plan de expansión",s2:"Tipología de formatos",
+  o1:"Tecnología en punto de venta",o2:"Relación Online–Offline"
+};
+
+// Build pilares
+const pDiv = document.getElementById("pilares");
+PILARES.forEach(p => {
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;align-items:center;gap:12px";
+  row.innerHTML = `<span style="font-size:13px;color:#6B6B6B;min-width:110px">${p}</span><div class="scale-btns" data-q="p4_${p}" style="justify-content:flex-start">${[1,2,3,4,5].map(n=>`<button type="button" class="scale-btn" data-v="${n}">${n}</button>`).join("")}</div>`;
+  pDiv.appendChild(row);
+  bindScale(row.querySelector(".scale-btns"));
+});
+
+// Build ejes
+const eDiv = document.getElementById("ejes");
+EJES.forEach(([l,r]) => {
+  const row = document.createElement("div");
+  row.innerHTML = `<div class="scale-row"><span class="scale-end" style="font-size:12px;color:#6B6B6B">${l}</span><div class="scale-btns" data-q="pos4_${l}">${[1,2,3,4,5].map(n=>`<button type="button" class="scale-btn" data-v="${n}">${n}</button>`).join("")}</div><span class="scale-end right" style="font-size:12px;color:#6B6B6B">${r}</span></div>`;
+  eDiv.appendChild(row);
+  bindScale(row.querySelector(".scale-btns"));
+});
+
+// Build refs
+const rg = document.getElementById("refGrid");
+REFS.forEach(r => {
+  const d = document.createElement("div");
+  d.className = "ref-item";
+  d.innerHTML = `<label>${r}</label><textarea data-q="ref_${r}" placeholder="Referencias…"></textarea>`;
+  rg.appendChild(d);
+});
+
+function bindScale(group) {
+  group.querySelectorAll(".scale-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      group.querySelectorAll(".scale-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      updateProgress();
+    });
+  });
+}
+
+document.querySelectorAll(".chips").forEach(group => {
+  const multi = group.dataset.multi === "true";
+  group.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      if (!multi) group.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+      chip.classList.toggle("active");
+      updateProgress();
+    });
+  });
+});
+
+document.querySelectorAll("textarea, input[type='text']").forEach(el => el.addEventListener("input", updateProgress));
+
+function collectAll() {
+  const data = {};
+  document.querySelectorAll("[data-q]").forEach(el => {
+    const k = el.dataset.q;
+    if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") data[k] = el.value.trim();
+    else if (el.classList.contains("chips")) data[k] = [...el.querySelectorAll(".chip.active")].map(c => c.dataset.v).join(", ");
+    else if (el.classList.contains("scale-btns")) { const a = el.querySelector(".scale-btn.active"); data[k] = a ? a.dataset.v : ""; }
+  });
+  return data;
+}
+
+function updateProgress() {
+  const data = collectAll();
+  const filled = Object.values(data).filter(v => v.length > 0).length;
+  const total = Object.keys(data).length;
+  const pct = Math.round((filled / total) * 100);
+  document.getElementById("prog").style.width = pct + "%";
+  document.getElementById("progLabel").textContent = pct + "%";
+  document.getElementById("footerStatus").textContent = pct === 0 ? "Completa el formulario para descargar el PDF" : `${pct}% completado`;
+}
+
+// ─── PDF GENERATION ───────────────────────────────────────────────────────────
+document.getElementById("btnExport").addEventListener("click", () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+  const W = 210, H = 297;
+  const ML = 20, MR = 20, MT = 20;
+  const CW = W - ML - MR;
+  let y = MT;
+  let pageNum = 1;
+
+  const data = collectAll();
+  const date = new Date().toLocaleDateString("es-ES", {day:"2-digit", month:"long", year:"numeric"});
+
+  function checkPage(needed = 12) {
+    if (y + needed > H - 18) {
+      // Footer line on current page
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.3);
+      doc.line(ML, H - 14, W - MR, H - 14);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(180, 180, 180);
+      doc.text("Cuestionario de Marca y Espacio — Culdesac", ML, H - 9);
+      doc.text(String(pageNum), W - MR, H - 9, { align: "right" });
+      doc.addPage();
+      pageNum++;
+      y = MT;
+    }
+  }
+
+  function drawCoverPage() {
+    // Top rule
+    doc.setDrawColor(10, 10, 10);
+    doc.setLineWidth(0.8);
+    doc.line(ML, 28, W - MR, 28);
+
+    // Title
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(28);
+    doc.setTextColor(10, 10, 10);
+    doc.text("Cuestionario", ML, 50);
+    doc.setFont("helvetica", "bold");
+    doc.text("de Marca y Espacio", ML, 62);
+
+    // Subtitle
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(107, 107, 107);
+    doc.text("Nueva marca premium — La Casa de las Carcasas", ML, 76);
+    doc.text("Completado el " + date, ML, 83);
+
+    // Bottom rule
+    doc.setDrawColor(232, 232, 232);
+    doc.setLineWidth(0.3);
+    doc.line(ML, H - 24, W - MR, H - 24);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(176, 176, 176);
+    doc.text("Cuestionario de Marca y Espacio — Culdesac", ML, H - 18);
+    doc.text("1", W - MR, H - 18, { align: "right" });
+  }
+
+  function partDivider(label) {
+    checkPage(20);
+    y += 6;
+    doc.setDrawColor(10, 10, 10);
+    doc.setLineWidth(0.6);
+    doc.line(ML, y, W - MR, y);
+    y += 6;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(10, 10, 10);
+    doc.setCharSpace(1.5);
+    doc.text(label.toUpperCase(), ML, y);
+    doc.setCharSpace(0);
+    y += 10;
+  }
+
+  function sectionHeader(num, title) {
+    checkPage(18);
+    y += 4;
+    doc.setDrawColor(232, 232, 232);
+    doc.setLineWidth(0.3);
+    doc.line(ML, y, W - MR, y);
+    y += 5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(176, 176, 176);
+    doc.setCharSpace(1);
+    doc.text(num, ML, y);
+    doc.setCharSpace(0);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(10, 10, 10);
+    doc.text(title, ML + 10, y);
+    y += 8;
+  }
+
+  function question(label, value) {
+    if (!value) return;
+    checkPage(16);
+    // Label
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(107, 107, 107);
+    doc.setCharSpace(0.5);
+    doc.text(label.toUpperCase(), ML, y);
+    doc.setCharSpace(0);
+    y += 4;
+    // Value — wrap text
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(26, 26, 26);
+    const lines = doc.splitTextToSize(value, CW);
+    lines.forEach(line => {
+      checkPage(6);
+      doc.text(line, ML, y);
+      y += 5.2;
+    });
+    y += 4;
+  }
+
+  function scaleLine(label, val) {
+    if (!val) return;
+    checkPage(8);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(107, 107, 107);
+    doc.text(label, ML, y);
+    // draw 5 small boxes
+    const bx = ML + 80;
+    for (let i = 1; i <= 5; i++) {
+      const bLeft = bx + (i-1)*8;
+      if (String(i) === val) {
+        doc.setFillColor(10,10,10);
+        doc.roundedRect(bLeft, y - 4, 6, 6, 0.8, 0.8, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.setTextColor(255,255,255);
+        doc.text(String(i), bLeft + 3, y, {align:"center"});
+      } else {
+        doc.setDrawColor(220,220,220);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(bLeft, y - 4, 6, 6, 0.8, 0.8, "S");
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(160,160,160);
+        doc.text(String(i), bLeft + 3, y, {align:"center"});
+      }
+    }
+    doc.setTextColor(26,26,26);
+    y += 7;
+  }
+
+  function chipLine(label, val) {
+    if (!val) return;
+    checkPage(10);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(107, 107, 107);
+    doc.setCharSpace(0.5);
+    doc.text(label.toUpperCase(), ML, y);
+    doc.setCharSpace(0);
+    y += 4;
+    const chips = val.split(", ").filter(Boolean);
+    let cx = ML;
+    chips.forEach(chip => {
+      const tw = doc.getTextWidth(chip) + 6;
+      if (cx + tw > W - MR) { cx = ML; y += 7; checkPage(8); }
+      doc.setFillColor(10,10,10);
+      doc.roundedRect(cx, y - 4.5, tw, 6.5, 1.5, 1.5, "F");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(255,255,255);
+      doc.text(chip, cx + tw/2, y, {align:"center"});
+      cx += tw + 3;
+    });
+    y += 8;
+  }
+
+  // ── BUILD ──
+  drawCoverPage();
+  doc.addPage();
+  pageNum++;
+  y = MT;
+
+  // PARTE 1: MARCA
+  partDivider("Parte 1 — Marca");
+
+  sectionHeader("00", "Contexto del proyecto");
+  question(LABELS.c1, data.c1); question(LABELS.c2, data.c2); question(LABELS.c3, data.c3);
+  question(LABELS.c4, data.c4); question(LABELS.c5, data.c5); chipLine(LABELS.c6, data.c6);
+
+  sectionHeader("01", "Visión y ambición");
+  question(LABELS.v1, data.v1); question(LABELS.v2, data.v2); question(LABELS.v3, data.v3);
+  question(LABELS.v4, data.v4); question(LABELS.v5, data.v5); question(LABELS.v6, data.v6);
+
+  sectionHeader("02", "Audiencia y cliente");
+  question(LABELS.a1, data.a1); chipLine(LABELS.a2, data.a2); question(LABELS.a3, data.a3); chipLine(LABELS.a4, data.a4);
+
+  sectionHeader("03", "Producto y propuesta de valor");
+  question(LABELS.p1, data.p1); question(LABELS.p2, data.p2); question(LABELS.p3, data.p3);
+  checkPage(14);
+  doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(107,107,107);
+  doc.setCharSpace(0.5); doc.text("PESO DE PILARES", ML, y); doc.setCharSpace(0); y += 5;
+  PILARES.forEach(p => scaleLine(p, data["p4_"+p]));
+  question(LABELS.p5, data.p5);
+
+  sectionHeader("04", "Posicionamiento");
+  question(LABELS.pos1, data.pos1); question(LABELS.pos2, data.pos2); question(LABELS.pos3, data.pos3);
+  checkPage(14);
+  doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(107,107,107);
+  doc.setCharSpace(0.5); doc.text("EJES DE POSICIONAMIENTO", ML, y); doc.setCharSpace(0); y += 5;
+  EJES.forEach(([l,r]) => {
+    checkPage(9);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(107,107,107);
+    doc.text(l, ML, y);
+    doc.text(r, W - MR, y, {align:"right"});
+    const bx = ML + 46;
+    for (let i=1;i<=5;i++){
+      const bLeft = bx+(i-1)*9;
+      const val = data["pos4_"+l];
+      if(String(i)===val){
+        doc.setFillColor(10,10,10);
+        doc.roundedRect(bLeft,y-4,7,6,0.8,0.8,"F");
+        doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(255,255,255);
+        doc.text(String(i),bLeft+3.5,y,{align:"center"});
+      } else {
+        doc.setDrawColor(220,220,220); doc.setLineWidth(0.3);
+        doc.roundedRect(bLeft,y-4,7,6,0.8,0.8,"S");
+        doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(160,160,160);
+        doc.text(String(i),bLeft+3.5,y,{align:"center"});
+      }
+    }
+    doc.setTextColor(26,26,26); y+=8;
+  });
+
+  sectionHeader("05", "Personalidad y tono");
+  question(LABELS.t1, data.t1); question(LABELS.t2, data.t2); question(LABELS.t3, data.t3);
+  question(LABELS.t4, data.t4); chipLine(LABELS.t5, data.t5); question(LABELS.t6, data.t6); chipLine(LABELS.t7, data.t7);
+
+  sectionHeader("06", "Referencias visuales y culturales");
+  REFS.forEach(r => question(r, data["ref_"+r]));
+
+  // PARTE 2: ESPACIO
+  partDivider("Parte 2 — Espacio");
+
+  sectionHeader("07", "Objetivos del proyecto");
+  question(LABELS.e1, data.e1); question(LABELS.e2, data.e2); question(LABELS.e3, data.e3);
+  question(LABELS.e4, data.e4); question(LABELS.e5, data.e5); question(LABELS.e6, data.e6); question(LABELS.e7, data.e7);
+
+  sectionHeader("08", "Identidad retail");
+  question(LABELS.r1, data.r1); question(LABELS.r2, data.r2);
+
+  sectionHeader("09", "Escalabilidad");
+  question(LABELS.s1, data.s1); question(LABELS.s2, data.s2);
+
+  sectionHeader("10", "Omnicanalidad");
+  question(LABELS.o1, data.o1); question(LABELS.o2, data.o2);
+
+  // Last page footer
+  doc.setDrawColor(220,220,220); doc.setLineWidth(0.3);
+  doc.line(ML, H-14, W-MR, H-14);
+  doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(180,180,180);
+  doc.text("Cuestionario de Marca y Espacio — Culdesac", ML, H-9);
+  doc.text(String(pageNum), W-MR, H-9, {align:"right"});
+
+  doc.save("cuestionario_marca_espacio.pdf");
+
+  document.getElementById("successBanner").style.display = "block";
+  document.getElementById("successBanner").scrollIntoView({behavior:"smooth", block:"nearest"});
+});
+
+updateProgress();
+</script>
+</body>
+</html>
